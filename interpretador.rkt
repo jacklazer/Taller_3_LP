@@ -170,16 +170,16 @@
                 (+ list-index-r 1)
                 #f))))))
 ;función que busca un símbolo en un ambiente
-(define apply-env
+(define buscar-variable
   (lambda (env sym)
     (cases environment env
       (empty-env-record ()
-                        (eopl:error 'apply-env "No binding for ~s" sym))
+                        (eopl:error 'buscar-variable "Error, la variable ~s no existe" sym))
       (extended-env-record (syms vals env)
                            (let ((pos (list-find-position sym syms)))
                              (if (number? pos)
                                  (list-ref vals pos)
-                                 (apply-env env sym)))))))
+                                 (buscar-variable env sym)))))))
 
 ; Ambiente inicial
 (define init-env
@@ -197,7 +197,39 @@
     (cases expresion exp
       (numero-lit (num) num)
       (texto-lit (txt) txt)
-      (var-exp (id) (apply-env env id))
-      (primapp-bin-exp (exp1 prim-binaria exp2) 1)
-      (primapp-un-exp (prim-unaria exp) 1)
-      )))
+      (var-exp (id) (buscar-variable env id))
+      (primapp-bin-exp (exp1 prim-binaria exp2) (aplicar-primitiva-binaria prim-binaria (eval-expression exp1 env) (eval-expression exp2 env)))
+      (primapp-un-exp (prim-unaria exp) (aplicar-primitiva-unaria prim-unaria (eval-expression exp env)))
+    )
+  )
+)
+
+; Funcion que aplica las operaciones binarias (las del tipo primitiva-binaria)
+(define aplicar-primitiva-binaria
+  (lambda (t-primitiva-binaria exp-1 exp-2)
+    (cases primitiva-binaria t-primitiva-binaria
+      (primitiva-suma () (+ exp-1 exp-2))
+      (primitiva-resta () (- exp-1 exp-2))
+      (primitiva-div () (/ exp-1 exp-2))
+      (primitiva-multi () (* exp-1 exp-2))
+      (primitiva-concat () (string-append exp-1 exp-2))
+    )
+  )
+)
+
+; Funcion que aplica las operaciones unarias (las del tipo primitiva-unaria)
+(define aplicar-primitiva-unaria
+  (lambda (t-primitiva-unaria exp-1)
+    (cases primitiva-unaria t-primitiva-unaria
+      (primitiva-add1 () (+ exp-1 1))
+      (primitiva-sub1 () (- exp-1 1))
+    )
+  )
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;valor-verdad?: determina si un valor dado corresponde a un valor booleano falso o verdadero
+(define valor-verdad?
+  (lambda (x)
+    (not (zero? x))))
