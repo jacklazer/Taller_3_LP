@@ -51,16 +51,19 @@
 ;Especificación Léxica:
 
 (define scanner-spec-simple-interpreter
-'((numero
+'(
+  (numero
    (digit (arbno digit)) number)
   (numero
    ("-" digit (arbno digit)) number)
   (numero
-   (digit "." digit (arbno digit)) number)
+   (digit (arbno digit) "." digit (arbno digit)) number)
   (numero
-   ("-" digit "." digit (arbno digit)) number)
+   ("-" digit (arbno digit) "." digit (arbno digit)) number)
+  
   (texto
    ("\"" (arbno (or letter digit whitespace "?")) "\"") string)
+  
   (identificador
    ("@" letter (arbno (or letter digit))) symbol)
   
@@ -79,6 +82,7 @@
     (expresion (numero) numero-lit)
     (expresion (texto) texto-lit)
     (expresion (identificador) var-exp)
+    
     (expresion ("(" expresion primitiva-binaria expresion ")") primapp-bin-exp)
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
     
