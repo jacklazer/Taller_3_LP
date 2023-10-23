@@ -26,6 +26,12 @@
             := <primitiva-unaria> (<expresion>)
                primapp-un-exp (prim-unaria exp)
 
+            := Si <expresion> entonces <expresion>  sino <expresion> finSI
+               condicional-exp (test-exp true-exp false-exp)
+
+            := declarar (<identificador> = <expresion> (;)) { <expresion> }
+               variableLocal-exp (ids exps cuerpo)
+
 
 <primitiva-binaria> :=  + (primitiva-suma)
 
@@ -44,6 +50,7 @@
 
                    :=  sub1 (primitiva-sub1)
 
+
 |#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,40 +58,40 @@
 ;Especificación Léxica:
 
 (define scanner-spec-simple-interpreter
-'(
-  (numero
-   (digit (arbno digit)) number)
-  (numero
-   ("-" digit (arbno digit)) number)
-  (numero
-   (digit (arbno digit) "." digit (arbno digit)) number)
-  (numero
-   ("-" digit (arbno digit) "." digit (arbno digit)) number)
+  '(
+    (numero (digit (arbno digit)) number)
+    (numero ("-" digit (arbno digit)) number)
+    (numero (digit (arbno digit) "." digit (arbno digit)) number)
+    (numero ("-" digit (arbno digit) "." digit (arbno digit)) number)
   
-  (texto
-   ("\"" (arbno (or letter digit whitespace "?")) "\"") string)
+    (texto ("\"" (arbno (or letter digit whitespace "?")) "\"") string)
+    ;(texto (letter (arbno (or letter digit whitespace "?"))) string)
   
-  (identificador
-   ("@" letter (arbno (or letter digit))) symbol)
+    (identificador ("@" letter (arbno (or letter digit))) symbol)
   
-  (espacio
-   (whitespace) skip)
-  (comentario
-   ("%" (arbno (not #\newline))) skip)))
+    (espacio (whitespace) skip)
+    (comentario ("%" (arbno (not #\newline))) skip)
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;Especificación Sintáctica (gramática):
 
 (define grammar-simple-interpreter
-  '((programa (expresion) un-programa)
+  '(
+    (programa (expresion) un-programa)
     
     (expresion (numero) numero-lit)
     (expresion (texto) texto-lit)
+    ;(expresion ("\"" texto "\"") texto-lit)
     (expresion (identificador) var-exp)
-    
     (expresion ("(" expresion primitiva-binaria expresion ")") primapp-bin-exp)
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
+
+    (expresion ("Si" expresion "entonces" expresion "sino" expresion "finSI") condicional-exp)
+
+    (expresion ("declarar" "(" (arbno identificador "=" expresion ";") ")" "{" expresion "}") variableLocal-exp)
     
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -92,8 +99,11 @@
     (primitiva-binaria ("*") primitiva-multi)
     (primitiva-binaria ("concat") primitiva-concat)
     
+    (primitiva-unaria ("longitud") primitiva-longitud)
     (primitiva-unaria ("add1") primitiva-add1)
-    (primitiva-unaria ("sub1") primitiva-sub1)))
+    (primitiva-unaria ("sub1") primitiva-sub1)
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -196,14 +206,30 @@
   (lambda (exp env)
     (cases expresion exp
       (numero-lit (num) num)
-      (texto-lit (txt) txt)
+      (texto-lit (txt) (substring txt 1 (- (string-length txt) 1)))
       (var-exp (id) (buscar-variable env id))
       (primapp-bin-exp (exp1 prim-binaria exp2) (aplicar-primitiva-binaria prim-binaria (eval-expression exp1 env) (eval-expression exp2 env)))
       (primapp-un-exp (prim-unaria exp) (aplicar-primitiva-unaria prim-unaria (eval-expression exp env)))
+      (condicional-exp (test-exp true-exp false-exp)
+        (if (valor-verdad? (eval-expression test-exp env))
+          (eval-expression true-exp env)
+          (eval-expression false-exp env)))
+      (variableLocal-exp (ids exps cuerpo)
+        (let ((args (eval-exps exps env)))
+          (eval-expression cuerpo (extend-env ids args env))))
     )
   )
 )
 
+; Funciones auxiliares
+(define eval-exps
+  (lambda (exps env)
+    (map (lambda (x) (eval-rand x env)) exps)))
+
+(define eval-rand
+  (lambda (rand env)
+    (eval-expression rand env)))
+                                 
 ; Funcion que aplica las operaciones binarias (las del tipo primitiva-binaria)
 (define aplicar-primitiva-binaria
   (lambda (t-primitiva-binaria exp-1 exp-2)
@@ -221,6 +247,7 @@
 (define aplicar-primitiva-unaria
   (lambda (t-primitiva-unaria exp-1)
     (cases primitiva-unaria t-primitiva-unaria
+      (primitiva-longitud () (string-length exp-1))
       (primitiva-add1 () (+ exp-1 1))
       (primitiva-sub1 () (- exp-1 1))
     )
