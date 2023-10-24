@@ -35,8 +35,11 @@
             := procedimiento (<identificador>*',') haga <expresion> finProc
                procedimiento-ex (ids cuero)
 
-            :=  "evaluar" expresion   (expresion ",")*  finEval
-                app-exp(exp exps) 
+            :=  evaluar expresion   (expresion ",")*  finEval
+                app-exp(exp exps)
+
+            := rec  {<identificador> ({<identificador>}*(,)) = <expresion>}* in <expresion>
+               rec-exp (proc-names idss bodies bodyletrec)
 
 
 <primitiva-binaria> :=  + (primitiva-suma)
@@ -102,6 +105,9 @@
     (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "haga" expresion "finProc") procedimiento-ex)
 
     (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")"  "finEval") app-exp)
+
+    (expresion ("rec" (arbno identificador "(" (separated-list identificador ",") ")" "=" expresion) "in" expresion) rec-exp)
+    
     
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -163,7 +169,11 @@
   (empty-env-record)
   (extended-env-record (syms (list-of symbol?))
                        (vals (list-of scheme-value?))
-                       (env environment?)))
+                       (env environment?))
+  (recursively-extended-env-record (proc-names (list-of symbol?))
+                                   (idss (list-of (list-of symbol?)))
+                                   (bodies (list-of expresion?))
+                                   (env environment?)))
 
 ;función que crea un ambiente vacío
 (define empty-env  
@@ -199,7 +209,20 @@
                            (let ((pos (list-find-position sym syms)))
                              (if (number? pos)
                                  (list-ref vals pos)
-                                 (buscar-variable env sym)))))))
+                                 (buscar-variable env sym))))
+      (recursively-extended-env-record (proc-names idss bodies old-env)
+                                       (let ((pos (list-find-position sym proc-names)))
+                                         (if (number? pos)
+                                             (cerradura (list-ref idss pos)
+                                                      (list-ref bodies pos)
+                                                      env)
+                                             (buscar-variable old-env sym)))))))
+
+;función que crea un ambiente extendido para procedimientos recursivos
+(define extend-env-recursively
+  (lambda (proc-names idss bodies old-env)
+    (recursively-extended-env-record
+     proc-names idss bodies old-env)))
 
 ; Ambiente inicial
 (define init-env
@@ -233,9 +256,15 @@
           (if (procVal? proc)
               (apply-procedure proc args)
               (eopl:error 'eval-expression "Attempt to apply non-procedure ~s" proc))))
+      (rec-exp (proc-names idss bodies bodyletrec)
+        (eval-expression bodyletrec
+        (extend-env-recursively proc-names idss bodies env)))
     )
   )
 )
+
+;            := rec  {<identificador> ({<identificador>}*(,)) = <expresion>}* in <expresion>
+ ;              rec-exp (proc-names idss bodies bodyletrec)
 
 ; Funciones auxiliares para evaluar variableLocal-exp's
 (define eval-exps
