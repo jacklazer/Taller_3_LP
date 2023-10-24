@@ -33,7 +33,7 @@
                variableLocal-exp (ids exps cuerpo)
 
             := procedimiento (<identificador>*',') haga <expresion> finProc
-               procedimiento-ex (ids cuero)
+               procedimiento-ex (ids cuerpo)
 
             :=  "evaluar" expresion   (expresion ",")*  finEval
                 app-exp(exp exps) 
@@ -294,3 +294,40 @@
 (define valor-verdad?
   (lambda (x)
     (not (zero? x))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Usando el interpretador
+
+(interpretador)
+
+;a) Programa en el lenguaje definido
+
+#|10pts. Escriba un programa en su lenguaje de programación
+que contenga un procedimiento areaCirculo que permita calcular el area
+de un circulo dado un radio (A=PI*r*r). Debe incluir valores flotantes en
+su lenguaje de programación. Deberá invocarlo utilizando una variable @radio
+como parámetro:
+
+      @radio=2.5;
+
+      @areaCirculo=
+
+      declarar (
+       
+      @pi=3.14;
+                       
+      @calcular=procedimiento(@pi, @radio)haga((@pi*@radio)*@radio)finProc;
+                
+      )
+      
+      {
+       evaluar @calcular(@radio,@pi)finEval  
+      };
+
+     ) { 
+
+         evaluar @areaCirculo (@radio) finEval  
+
+       }
+|#
