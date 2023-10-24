@@ -330,33 +330,46 @@
 
 (interpretador)
 
-;a) Programa en el lenguaje definido
+#|
+a) 10pts. Escriba un programa en su lenguaje de programación que contenga
+un procedimiento areaCirculo que permita calcular el area de un circulo dado
+un radio (A=PI*r*r). Debe incluir valores flotantes en su lenguaje de programación.
+Deberá invocarlo utilizando una variable @radio como parámetro:
 
-#|10pts. Escriba un programa en su lenguaje de programación
-que contenga un procedimiento areaCirculo que permita calcular el area
-de un circulo dado un radio (A=PI*r*r). Debe incluir valores flotantes en
-su lenguaje de programación. Deberá invocarlo utilizando una variable @radio
-como parámetro:
-
-      @radio=2.5;
-
-      @areaCirculo=
-
-      declarar (
-       
-      @pi=3.14;
-                       
-      @calcular=procedimiento(@pi, @radio)haga((@pi*@radio)*@radio)finProc;
-                
-      )
-      
-      {
-       evaluar @calcular(@radio,@pi)finEval  
-      };
-
-     ) { 
-
-         evaluar @areaCirculo (@radio) finEval  
-
-       }
+R\\
+declarar(
+	@radio=2.5;
+	@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
+)
+{evaluar @areaCirculo(@radio) finEval}
 |#
+
+
+#|
+b) 5pts. Escriba un programa en su lenguaje de programación que contenga
+un procedimiento que permita calcular el factorial de un número n. Como
+la gramática para funciones recursivas debe ser propuesta por el grupo,
+incluya dos ejemplos de uso para el factorial de 5 y el factorial de 10.
+
+R\\
+rec
+	@factorial(@n)=
+		Si @n entonces (@n * evaluar @factorial(sub1(@n)) finEval) 
+		sino 1 finSI
+in 
+	evaluar @factorial(6) finEval
+
+|#
+
+
+
+
+
+
+
+
+
+
+
+
+
