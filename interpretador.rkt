@@ -35,6 +35,9 @@
             := procedimiento (<identificador>*',') haga <expresion> finProc
                procedimiento-ex (ids cuero)
 
+            :=  "evaluar" expresion   (expresion ",")*  finEval
+                app-exp(exp exps) 
+
 
 <primitiva-binaria> :=  + (primitiva-suma)
 
@@ -97,6 +100,8 @@
     (expresion ("declarar" "(" (arbno identificador "=" expresion ";") ")" "{" expresion "}") variableLocal-exp)
 
     (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "haga" expresion "finProc") procedimiento-ex)
+
+    (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")"  "finEval") app-exp)
     
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -223,6 +228,11 @@
         (let ((args (eval-exps exps env)))
           (eval-expression cuerpo (extend-env ids args env))))
       (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo env))
+      (app-exp (exp exps)
+        (let ((proc (eval-expression exp env)) (args (eval-exps exps env)))
+          (if (procVal? proc)
+              (apply-procedure proc args)
+              (eopl:error 'eval-expression "Attempt to apply non-procedure ~s" proc))))
     )
   )
 )
@@ -242,9 +252,15 @@
   (cerradura
     (lista-ID (list-of symbol?))
     (exp expresion?)
-    (amb environment?); <------ Cambiar nombre a ambiente
+    (amb environment?); <------ Cambiar nombre de enviroment a ambiente (y todos los demas)
   )
 )
+
+(define apply-procedure
+  (lambda (proc args)
+    (cases procVal proc
+      (cerradura (ids body env)
+               (eval-expression body (extend-env ids args env))))))
 
 
                                  
