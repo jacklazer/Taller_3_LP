@@ -90,7 +90,6 @@
     
     (expresion (numero) numero-lit)
     (expresion (texto) texto-lit)
-    ;(expresion ("\"" texto "\"") texto-lit)
     (expresion (identificador) var-exp)
     (expresion ("(" expresion primitiva-binaria expresion ")") primapp-bin-exp)
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
@@ -102,6 +101,8 @@
     (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "haga" expresion "finProc") procedimiento-ex)
 
     (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")"  "finEval") app-exp)
+
+    (expresion ("declarar-recursiva" (arbno identificador "(" (separated-list identificador ",") ")" "=" expresion) "en" expresion) evalrec-exp)
     
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -233,6 +234,9 @@
           (if (procVal? proc)
               (apply-procedure proc args)
               (eopl:error 'eval-expression "Attempt to apply non-procedure ~s" proc))))
+      (evalrec-exp (proc-names idss bodies letrec-body)
+                  (eval-expression letrec-body
+                                   (extended-env-record proc-names idss bodies env)))
     )
   )
 )
@@ -256,6 +260,7 @@
   )
 )
 
+;apply-procedure: evalua el cuerpo de un procedimientos en el ambiente extendido correspondiente
 (define apply-procedure
   (lambda (proc args)
     (cases procVal proc
@@ -294,3 +299,14 @@
 (define valor-verdad?
   (lambda (x)
     (not (zero? x))))
+
+;*******************************************************************************************
+
+;;a). Escriba un programa en su lenguaje de programación que contenga un procedimiento
+;;areaCirculo que permita calcular el area de un circulo dado un radio (A=PI*r*r).
+
+
+;;declarar(
+;;@radio=2.5;
+;;@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
+;;){evaluar @areaCirculo(@radio) finEval}
