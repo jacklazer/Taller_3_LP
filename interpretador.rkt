@@ -32,6 +32,9 @@
             := declarar (<identificador> = <expresion> (;)) { <expresion> }
                variableLocal-exp (ids exps cuerpo)
 
+            := procedimiento (<identificador>*',') haga <expresion> finProc
+               procedimiento-ex (ids cuero)
+
 
 <primitiva-binaria> :=  + (primitiva-suma)
 
@@ -92,6 +95,8 @@
     (expresion ("Si" expresion "entonces" expresion "sino" expresion "finSI") condicional-exp)
 
     (expresion ("declarar" "(" (arbno identificador "=" expresion ";") ")" "{" expresion "}") variableLocal-exp)
+
+    (expresion ("procedimiento" "(" (separated-list identificador ",") ")" "haga" expresion "finProc") procedimiento-ex)
     
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -217,11 +222,12 @@
       (variableLocal-exp (ids exps cuerpo)
         (let ((args (eval-exps exps env)))
           (eval-expression cuerpo (extend-env ids args env))))
+      (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo env))
     )
   )
 )
 
-; Funciones auxiliares
+; Funciones auxiliares para evaluar variableLocal-exp's
 (define eval-exps
   (lambda (exps env)
     (map (lambda (x) (eval-rand x env)) exps)))
@@ -229,6 +235,18 @@
 (define eval-rand
   (lambda (rand env)
     (eval-expression rand env)))
+
+
+; Funciones auxiliares para evaluar procedimiento-ex's
+(define-datatype procVal procVal?
+  (cerradura
+    (lista-ID (list-of symbol?))
+    (exp expresion?)
+    (amb environment?); <------ Cambiar nombre a ambiente
+  )
+)
+
+
                                  
 ; Funcion que aplica las operaciones binarias (las del tipo primitiva-binaria)
 (define aplicar-primitiva-binaria
