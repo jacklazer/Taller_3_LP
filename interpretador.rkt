@@ -33,10 +33,13 @@
                variableLocal-exp (ids exps cuerpo)
 
             := procedimiento (<identificador>*',') haga <expresion> finProc
-               procedimiento-ex (ids cuero)
+               procedimiento-ex (ids cuerpo)
 
-            :=  "evaluar" expresion   (expresion ",")*  finEval
-                app-exp(exp exps) 
+            :=  evaluar expresion   (expresion ",")*  finEval
+                app-exp(exp exps)
+
+            := rec  {<identificador> ({<identificador>}*(,)) = <expresion>}* in <expresion>
+               rec-exp (proc-names idss bodies bodyletrec)
 
 
 <primitiva-binaria> :=  + (primitiva-suma)
@@ -70,8 +73,8 @@
     (numero (digit (arbno digit) "." digit (arbno digit)) number)
     (numero ("-" digit (arbno digit) "." digit (arbno digit)) number)
   
-    (texto ("\"" (arbno (or letter digit whitespace "?")) "\"") string)
-    ;(texto (letter (arbno (or letter digit whitespace "?"))) string)
+    (texto ("\"" (arbno (or letter digit whitespace "," ":" "?")) "\"") string)
+    ;(texto ("/" (arbno (or letter digit whitespace "?"))"/") string)
   
     (identificador ("@" letter (arbno (or letter digit))) symbol)
   
@@ -90,6 +93,7 @@
     
     (expresion (numero) numero-lit)
     (expresion (texto) texto-lit)
+    ;(expresion ("\"" texto "\"") texto-lit)
     (expresion (identificador) var-exp)
     (expresion ("(" expresion primitiva-binaria expresion ")") primapp-bin-exp)
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
@@ -102,7 +106,8 @@
 
     (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")"  "finEval") app-exp)
 
-    (expresion ("declarar-recursiva" (arbno identificador "(" (separated-list identificador ",") ")" "=" expresion) "en" expresion) evalrec-exp)
+    (expresion ("rec" (arbno identificador "(" (separated-list identificador ",") ")" "=" expresion) "in" expresion) rec-exp)
+    
     
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -164,7 +169,11 @@
   (empty-env-record)
   (extended-env-record (syms (list-of symbol?))
                        (vals (list-of scheme-value?))
-                       (env environment?)))
+                       (env environment?))
+  (recursively-extended-env-record (proc-names (list-of symbol?))
+                                   (idss (list-of (list-of symbol?)))
+                                   (bodies (list-of expresion?))
+                                   (env environment?)))
 
 ;función que crea un ambiente vacío
 (define empty-env  
@@ -200,7 +209,20 @@
                            (let ((pos (list-find-position sym syms)))
                              (if (number? pos)
                                  (list-ref vals pos)
-                                 (buscar-variable env sym)))))))
+                                 (buscar-variable env sym))))
+      (recursively-extended-env-record (proc-names idss bodies old-env)
+                                       (let ((pos (list-find-position sym proc-names)))
+                                         (if (number? pos)
+                                             (cerradura (list-ref idss pos)
+                                                      (list-ref bodies pos)
+                                                      env)
+                                             (buscar-variable old-env sym)))))))
+
+;función que crea un ambiente extendido para procedimientos recursivos
+(define extend-env-recursively
+  (lambda (proc-names idss bodies old-env)
+    (recursively-extended-env-record
+     proc-names idss bodies old-env)))
 
 ; Ambiente inicial
 (define init-env
@@ -234,12 +256,15 @@
           (if (procVal? proc)
               (apply-procedure proc args)
               (eopl:error 'eval-expression "Attempt to apply non-procedure ~s" proc))))
-      (evalrec-exp (proc-names idss bodies letrec-body)
-                  (eval-expression letrec-body
-                                   (extended-env-record proc-names idss bodies env)))
+      (rec-exp (proc-names idss bodies bodyletrec)
+        (eval-expression bodyletrec
+        (extend-env-recursively proc-names idss bodies env)))
     )
   )
 )
+
+;            := rec  {<identificador> ({<identificador>}*(,)) = <expresion>}* in <expresion>
+ ;              rec-exp (proc-names idss bodies bodyletrec)
 
 ; Funciones auxiliares para evaluar variableLocal-exp's
 (define eval-exps
@@ -260,7 +285,6 @@
   )
 )
 
-;apply-procedure: evalua el cuerpo de un procedimientos en el ambiente extendido correspondiente
 (define apply-procedure
   (lambda (proc args)
     (cases procVal proc
@@ -300,13 +324,89 @@
   (lambda (x)
     (not (zero? x))))
 
-;*******************************************************************************************
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;a). Escriba un programa en su lenguaje de programación que contenga un procedimiento
-;;areaCirculo que permita calcular el area de un circulo dado un radio (A=PI*r*r).
+;Usando el interpretador
+
+;(interpretador)
+
+#|
+a) 10pts. Escriba un programa en su lenguaje de programación que contenga
+un procedimiento areaCirculo que permita calcular el area de un circulo dado
+un radio (A=PI*r*r). Debe incluir valores flotantes en su lenguaje de programación.
+Deberá invocarlo utilizando una variable @radio como parámetro:
+
+R\\
+declarar(
+	@radio=2.5;
+	@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
+)
+{evaluar @areaCirculo(@radio) finEval}
+|#
 
 
-;;declarar(
-;;@radio=2.5;
-;;@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
-;;){evaluar @areaCirculo(@radio) finEval}
+#|
+b) 5pts. Escriba un programa en su lenguaje de programación que contenga
+un procedimiento que permita calcular el factorial de un número n. Como
+la gramática para funciones recursivas debe ser propuesta por el grupo,
+incluya dos ejemplos de uso para el factorial de 5 y el factorial de 10.
+
+R\\
+rec
+	@factorial(@n)=
+		Si @n entonces (@n * evaluar @factorial(sub1(@n)) finEval) 
+		sino 1 finSI
+in 
+	evaluar @factorial(6) finEval
+
+|#
+
+#|
+e)Crea una función @integrantes que muestre los nombres de los integrantes del grupo
+y adicionalmente crea un decorador que al invocarlo salude a los integrantes
+
+declarar(
+@hola = "Hola: ";
+@integrante1 = "Aleja";
+@integrante2 = "Juan";
+@integrante3 = "Yissy";
+){
+declarar(
+	@integrantes = procedimiento()
+        haga (@integrante1 concat (", " concat (@integrante2 concat (" y " concat @integrante3)))) finProc;
+){
+declarar(
+	@saludar = procedimiento(@procedimientoXD) 
+	haga procedimiento()
+        haga (@hola concat evaluar @procedimientoXD() finEval) finProc
+        finProc;
+){
+declarar(
+	@decorate = evaluar @saludar (@integrantes) finEval;
+){
+        evaluar @decorate() finEval
+}}}}
+
+|#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
