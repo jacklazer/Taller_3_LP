@@ -388,6 +388,45 @@ declarar(
 }}}}
 
 |#
+#|
+f) 35pts. Modifique el ejercicio anterior para que el decorador reciba
+como parámetro otro mensaje que debe ponerse al final de todo el string
+(cualquier implementación sin el concepto de decorador no será evaluada).
+
+R\\
+declarar(
+	@hola = "Hola: ";
+	@integrante1 = "Aleja";
+	@integrante2 = "Juan";
+	@integrante3 = "Yissy";
+)
+{
+	declarar(
+		@integrantes = procedimiento() haga (@integrante1 concat (", " concat (@integrante2 concat (" y " concat @integrante3)))) finProc;
+	)
+	{
+		declarar(
+			@saludar = 
+				procedimiento(@procedimientoXD) 
+				haga 
+					procedimiento() haga (@hola concat evaluar @procedimientoXD() finEval) finProc
+				finProc;
+		)
+		{
+			declarar(
+				@decorate =
+					procedimiento(@mensajeXD) 
+					haga 
+						(evaluar evaluar @saludar (@integrantes) finEval () finEval concat @mensajeXD)
+					finProc;
+			)
+			{
+				evaluar @decorate(" EstudiantesFLP") finEval
+			}
+		}
+	}
+}
+|#
 
 
 
