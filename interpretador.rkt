@@ -385,10 +385,7 @@ R\\
 ;Restar
 
 rec
-    @sumar(@a, @b) =
-        Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
-        sino @a finSI
-    
+
     @restar(@a, @b)=
 	Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
 	sino @a finSI
