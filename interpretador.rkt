@@ -387,10 +387,6 @@ rec
     @sumar(@a, @b) =
         Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
         sino @a finSI
-
-    @multiplicar(@a, @b) =
-        Si @b entonces evaluar @sumar(@a, evaluar @multiplicar(@a, sub1(@b)) finEval) finEval
-        sino 0 finSI
     
     @restar(@a, @b)=
 	Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
@@ -409,10 +405,7 @@ rec
     @multiplicar(@a, @b) =
         Si @b entonces evaluar @sumar(@a, evaluar @multiplicar(@a, sub1(@b)) finEval) finEval
         sino 0 finSI
-    
-    @restar(@a, @b)=
-	Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
-	sino @a finSI
+   
 in
 
 evaluar @multiplicar (10, 3) finEval
