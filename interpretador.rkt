@@ -3,7 +3,6 @@
 ; Juan Sebastian Cifuentes Vallejo - 202179800
 ; Maria Alejandra Carvajal Perez - 202178495
 ; Yissy Katherine Posso Perea - 202181910
-; https://github.com/jacklazer/Taller_3_LP.git
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -74,7 +73,7 @@
     (numero (digit (arbno digit) "." digit (arbno digit)) number)
     (numero ("-" digit (arbno digit) "." digit (arbno digit)) number)
   
-    (texto ("\"" (arbno (or letter digit whitespace "?")) "\"") string)
+    (texto ("\"" (arbno (or letter digit whitespace "," ":" "-" "?")) "\"") string)
     ;(texto (letter (arbno (or letter digit whitespace "?"))) string)
   
     (identificador ("@" letter (arbno (or letter digit))) symbol)
@@ -147,7 +146,7 @@
 
 (define interpretador
   (sllgen:make-rep-loop "--> "
-    (lambda (pgm) (eval-program  pgm))
+    (lambda (pgm) (evaluar-programa  pgm))
     (sllgen:make-stream-parser 
       scanner-spec-simple-interpreter
       grammar-simple-interpreter)))
@@ -156,25 +155,25 @@
 
 ; función que evalúa un programa teniendo en cuenta un ambiente dado (se inicializa dentro del programa)
 
-(define eval-program
+(define evaluar-programa
   (lambda (pgm)
     (cases programa pgm
       (un-programa (exp)
-                 (eval-expression exp (init-env))))))
+                 (evaluar-expresion exp (init-env))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define scheme-value? (lambda (v) #t))
 ;definición del tipo de dato ambiente
-(define-datatype environment environment?
+(define-datatype ambiente ambiente?
   (empty-env-record)
   (extended-env-record (syms (list-of symbol?))
                        (vals (list-of scheme-value?))
-                       (env environment?))
+                       (env ambiente?))
   (recursively-extended-env-record (proc-names (list-of symbol?))
                                    (idss (list-of (list-of symbol?)))
                                    (bodies (list-of expresion?))
-                                   (env environment?)))
+                                   (env ambiente?)))
 
 ;función que crea un ambiente vacío
 (define empty-env  
@@ -203,7 +202,7 @@
 ;función que busca un símbolo en un ambiente
 (define buscar-variable
   (lambda (env sym)
-    (cases environment env
+    (cases ambiente env
       (empty-env-record ()
                         (eopl:error 'buscar-variable "Error, la variable ~s no existe" sym))
       (extended-env-record (syms vals env)
@@ -236,36 +235,33 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Evalua la expresión en el ambiente de entrada
-(define eval-expression
+(define evaluar-expresion
   (lambda (exp env)
     (cases expresion exp
       (numero-lit (num) num)
       (texto-lit (txt) (substring txt 1 (- (string-length txt) 1)))
       (var-exp (id) (buscar-variable env id))
-      (primapp-bin-exp (exp1 prim-binaria exp2) (aplicar-primitiva-binaria prim-binaria (eval-expression exp1 env) (eval-expression exp2 env)))
-      (primapp-un-exp (prim-unaria exp) (aplicar-primitiva-unaria prim-unaria (eval-expression exp env)))
+      (primapp-bin-exp (exp1 prim-binaria exp2) (aplicar-primitiva-binaria prim-binaria (evaluar-expresion exp1 env) (evaluar-expresion exp2 env)))
+      (primapp-un-exp (prim-unaria exp) (aplicar-primitiva-unaria prim-unaria (evaluar-expresion exp env)))
       (condicional-exp (test-exp true-exp false-exp)
-        (if (valor-verdad? (eval-expression test-exp env))
-          (eval-expression true-exp env)
-          (eval-expression false-exp env)))
+        (if (valor-verdad? (evaluar-expresion test-exp env))
+          (evaluar-expresion true-exp env)
+          (evaluar-expresion false-exp env)))
       (variableLocal-exp (ids exps cuerpo)
         (let ((args (eval-exps exps env)))
-          (eval-expression cuerpo (extend-env ids args env))))
+          (evaluar-expresion cuerpo (extend-env ids args env))))
       (procedimiento-ex (ids cuerpo) (cerradura ids cuerpo env))
       (app-exp (exp exps)
-        (let ((proc (eval-expression exp env)) (args (eval-exps exps env)))
+        (let ((proc (evaluar-expresion exp env)) (args (eval-exps exps env)))
           (if (procVal? proc)
               (apply-procedure proc args)
-              (eopl:error 'eval-expression "Attempt to apply non-procedure ~s" proc))))
+              (eopl:error 'evaluar-expresion "Attempt to apply non-procedure ~s" proc))))
       (rec-exp (proc-names idss bodies bodyletrec)
-        (eval-expression bodyletrec
+        (evaluar-expresion bodyletrec
         (extend-env-recursively proc-names idss bodies env)))
     )
   )
 )
-
-;            := rec  {<identificador> ({<identificador>}*(,)) = <expresion>}* in <expresion>
- ;              rec-exp (proc-names idss bodies bodyletrec)
 
 ; Funciones auxiliares para evaluar variableLocal-exp's
 (define eval-exps
@@ -274,7 +270,7 @@
 
 (define eval-rand
   (lambda (rand env)
-    (eval-expression rand env)))
+    (evaluar-expresion rand env)))
 
 
 ; Funciones auxiliares para evaluar procedimiento-ex's
@@ -282,7 +278,7 @@
   (cerradura
     (lista-ID (list-of symbol?))
     (exp expresion?)
-    (amb environment?); <------ Cambiar nombre de enviroment a ambiente (y todos los demas)
+    (amb ambiente?)
   )
 )
 
@@ -290,7 +286,7 @@
   (lambda (proc args)
     (cases procVal proc
       (cerradura (ids body env)
-               (eval-expression body (extend-env ids args env))))))
+               (evaluar-expresion body (extend-env ids args env))))))
 
 
                                  
@@ -341,10 +337,9 @@ R\\
 declarar(
 	@radio=2.5;
 	@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
-) 
+)
 {evaluar @areaCirculo(@radio) finEval}
 |#
-
 
 #|
 b) 5pts. Escriba un programa en su lenguaje de programación que contenga
@@ -359,13 +354,15 @@ rec
 		sino 1 finSI
 in 
 	evaluar @factorial(6) finEval
+|#
 
-c) 10pts. Escriba un programa en su lenguaje de programación que contenga un
-procedimiento que permita calcular una suma de forma recursiva. Debe hacer uso
-de las funciones add1 y sub1 (remitase a la clase donde se implementó la interfaz
-con las funciones zero, isZero?, sucessor, predecessor). Si no se evidencia el
-uso de add1 y sub1, el ejercicio no será valido. Incluya un llamado a la función
-recursiva: "evaluar @sumar (4, 5) finEval "
+#|
+c) 10pts. Escriba un programa en su lenguaje de programación que contenga
+un procedimiento que permita calcular una suma de forma recursiva. Debe
+hacer uso de las funciones add1 y sub1 (remitase a la clase donde se implementó
+la interfaz con las funciones zero, isZero?, sucessor, predecessor). Si
+no se evidencia el uso de add1 y sub1, el ejercicio no será valido. Incluya
+un llamado a la función recursiva: "evaluar @sumar (4, 5) finEval "
 
 R\\
 rec
@@ -374,47 +371,110 @@ rec
 		sino @a finSI
 in 
 	evaluar @sumar(4,5) finEval
-
-
-
-d)15pts.Escriba un programa en su lenguaje de programación que permita restar y
- multiplicar dos números haciendo uso solamente de las primitivas add1 y sub1. Incluya
- llamados:  "evaluar @restar (10, 3) finEval  ",  "evaluar @multiplicar (10, 3) finEval  ".
-
-R\\
-;Restar
-
-rec
-
-    @restar(@a, @b)=
-	Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
-	sino @a finSI
-in
-
-evaluar @restar (10, 3) finEval
-
-;Multiplicar
-
-rec
-    @sumar(@a, @b) =
-        Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
-        sino @a finSI
-
-    @multiplicar(@a, @b) =
-        Si @b entonces evaluar @sumar(@a, evaluar @multiplicar(@a, sub1(@b)) finEval) finEval
-        sino 0 finSI
-   
-in
-
-evaluar @multiplicar (10, 3) finEval
-
 |#
 
+#|
+d) 15pts. Escriba un programa en su lenguaje de programación que permita
+restar y multiplicar dos números haciendo uso solamente de las primitivas
+add1 y sub1. Incluya llamados:  "evaluar @restar (10, 3) finEval  ",  "evaluar
+@multiplicar (10, 3) finEval  ".
 
+R\\
+rec
+	@restar(@a, @b)=
+		Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
+		sino @a finSI
+in 
+	evaluar @restar (10, 3) finEval
 
+rec
+	@sumar(@a, @b) =
+		Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
+		sino @a finSI
 
+	@multiplicar(@a, @b) =
+		Si @b entonces evaluar @sumar(@a, evaluar @multiplicar(@a, sub1(@b)) finEval) finEval
+		sino 0 finSI
+in
+	evaluar @multiplicar(10, 3) finEval
+|#
 
+#|
+e) 25pts. En python se puede utilizar algo que se llaman decoradores (por favor
+leer aquí). Crea una función @integrantes que muestre los nombres de los
+integrantes del grupo y adicionalmente crea un decorador que al invocarlo
+salude a los integrantes:
 
+R\\
+declarar(
+	@hola = "Hola: ";
+	@integrante1 = "Aleja";
+	@integrante2 = "Juan";
+	@integrante3 = "Yissy";
+)
+{
+	declarar(
+		@integrantes = procedimiento() haga (@integrante1 concat (", " concat (@integrante2 concat (" y " concat @integrante3)))) finProc;
+	)
+	{
+		declarar(
+			@saludar = 
+				procedimiento(@procedimientoXD) 
+				haga 
+					procedimiento() haga (@hola concat evaluar @procedimientoXD() finEval) finProc
+				finProc;
+		)
+		{
+			declarar(
+				@decorate = evaluar @saludar (@integrantes) finEval;
+			)
+			{
+				evaluar @decorate() finEval
+			}
+		}
+	}
+}
+|#
+
+#|
+f) 35pts. Modifique el ejercicio anterior para que el decorador reciba
+como parámetro otro mensaje que debe ponerse al final de todo el string
+(cualquier implementación sin el concepto de decorador no será evaluada).
+
+R\\
+declarar(
+	@hola = "Hola: ";
+	@integrante1 = "Aleja";
+	@integrante2 = "Juan";
+	@integrante3 = "Yissy";
+)
+{
+	declarar(
+		@integrantes = procedimiento() haga (@integrante1 concat (", " concat (@integrante2 concat (" y " concat @integrante3)))) finProc;
+	)
+	{
+		declarar(
+			@saludar = 
+				procedimiento(@procedimientoXD) 
+				haga 
+					procedimiento() haga (@hola concat evaluar @procedimientoXD() finEval) finProc
+				finProc;
+		)
+		{
+			declarar(
+				@decorate =
+					procedimiento(@mensajeXD) 
+					haga 
+						(evaluar evaluar @saludar (@integrantes) finEval () finEval concat @mensajeXD)
+					finProc;
+			)
+			{
+				evaluar @decorate(" EstudiantesFLP") finEval
+			}
+		}
+	}
+}
+|#
 
 
 
