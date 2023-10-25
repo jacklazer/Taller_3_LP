@@ -4,6 +4,8 @@
 ; Maria Alejandra Carvajal Perez - 202178495
 ; Yissy Katherine Posso Perea - 202181910
 
+; URL del repositorio: https://github.com/jacklazer/Taller_3_LP.git
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #| GRAMATICA:
@@ -199,6 +201,7 @@
               (if (number? list-index-r)
                 (+ list-index-r 1)
                 #f))))))
+
 ;función que busca un símbolo en un ambiente
 (define buscar-variable
   (lambda (env sym)
@@ -328,12 +331,8 @@
 (interpretador)
 
 #|
-a) 10pts. Escriba un programa en su lenguaje de programación que contenga
-un procedimiento areaCirculo que permita calcular el area de un circulo dado
-un radio (A=PI*r*r). Debe incluir valores flotantes en su lenguaje de programación.
-Deberá invocarlo utilizando una variable @radio como parámetro:
+a)
 
-R\\
 declarar(
 	@radio=2.5;
 	@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
@@ -342,12 +341,8 @@ declarar(
 |#
 
 #|
-b) 5pts. Escriba un programa en su lenguaje de programación que contenga
-un procedimiento que permita calcular el factorial de un número n. Como
-la gramática para funciones recursivas debe ser propuesta por el grupo,
-incluya dos ejemplos de uso para el factorial de 5 y el factorial de 10.
+b)
 
-R\\
 rec
 	@factorial(@n)=
 		Si @n entonces (@n * evaluar @factorial(sub1(@n)) finEval) 
@@ -357,14 +352,8 @@ in
 |#
 
 #|
-c) 10pts. Escriba un programa en su lenguaje de programación que contenga
-un procedimiento que permita calcular una suma de forma recursiva. Debe
-hacer uso de las funciones add1 y sub1 (remitase a la clase donde se implementó
-la interfaz con las funciones zero, isZero?, sucessor, predecessor). Si
-no se evidencia el uso de add1 y sub1, el ejercicio no será valido. Incluya
-un llamado a la función recursiva: "evaluar @sumar (4, 5) finEval "
+c)
 
-R\\
 rec
 	@sumar(@a, @b)=
 		Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
@@ -374,12 +363,8 @@ in
 |#
 
 #|
-d) 15pts. Escriba un programa en su lenguaje de programación que permita
-restar y multiplicar dos números haciendo uso solamente de las primitivas
-add1 y sub1. Incluya llamados:  "evaluar @restar (10, 3) finEval  ",  "evaluar
-@multiplicar (10, 3) finEval  ".
+d)
 
-R\\
 rec
 	@restar(@a, @b)=
 		Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
@@ -400,12 +385,8 @@ in
 |#
 
 #|
-e) 25pts. En python se puede utilizar algo que se llaman decoradores (por favor
-leer aquí). Crea una función @integrantes que muestre los nombres de los
-integrantes del grupo y adicionalmente crea un decorador que al invocarlo
-salude a los integrantes:
+e)
 
-R\\
 declarar(
 	@hola = "Hola: ";
 	@integrante1 = "Aleja";
@@ -437,11 +418,8 @@ declarar(
 |#
 
 #|
-f) 35pts. Modifique el ejercicio anterior para que el decorador reciba
-como parámetro otro mensaje que debe ponerse al final de todo el string
-(cualquier implementación sin el concepto de decorador no será evaluada).
+f)
 
-R\\
 declarar(
 	@hola = "Hola: ";
 	@integrante1 = "Aleja";
