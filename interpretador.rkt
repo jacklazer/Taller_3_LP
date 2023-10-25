@@ -340,7 +340,7 @@ R\\
 declarar(
 	@radio=2.5;
 	@areaCirculo=procedimiento(@radio) haga (3.14*(@radio*@radio)) finProc;
-)
+) 
 {evaluar @areaCirculo(@radio) finEval}
 |#
 
@@ -366,12 +366,56 @@ con las funciones zero, isZero?, sucessor, predecessor). Si no se evidencia el
 uso de add1 y sub1, el ejercicio no será valido. Incluya un llamado a la función
 recursiva: "evaluar @sumar (4, 5) finEval "
 
+R\\
 rec
 	@sumar(@a, @b)=
 		Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
 		sino @a finSI
 in 
 	evaluar @sumar(4,5) finEval
+
+
+
+d)15pts.Escriba un programa en su lenguaje de programación que permita restar y
+ multiplicar dos números haciendo uso solamente de las primitivas add1 y sub1. Incluya
+ llamados:  "evaluar @restar (10, 3) finEval  ",  "evaluar @multiplicar (10, 3) finEval  ".
+
+R\\
+;Restar
+
+rec
+    @sumar(@a, @b) =
+        Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
+        sino @a finSI
+
+    @multiplicar(@a, @b) =
+        Si @b entonces evaluar @sumar(@a, evaluar @multiplicar(@a, sub1(@b)) finEval) finEval
+        sino 0 finSI
+    
+    @restar(@a, @b)=
+	Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
+	sino @a finSI
+in
+
+evaluar @restar (10, 3) finEval
+
+;Multiplicar
+
+rec
+    @sumar(@a, @b) =
+        Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
+        sino @a finSI
+
+    @multiplicar(@a, @b) =
+        Si @b entonces evaluar @sumar(@a, evaluar @multiplicar(@a, sub1(@b)) finEval) finEval
+        sino 0 finSI
+    
+    @restar(@a, @b)=
+	Si @b entonces evaluar @restar(sub1(@a), sub1(@b)) finEval
+	sino @a finSI
+in
+
+evaluar @multiplicar (10, 3) finEval
 
 |#
 
