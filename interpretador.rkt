@@ -359,6 +359,20 @@ rec
 in 
 	evaluar @factorial(6) finEval
 
+c) 10pts. Escriba un programa en su lenguaje de programación que contenga un
+procedimiento que permita calcular una suma de forma recursiva. Debe hacer uso
+de las funciones add1 y sub1 (remitase a la clase donde se implementó la interfaz
+con las funciones zero, isZero?, sucessor, predecessor). Si no se evidencia el
+uso de add1 y sub1, el ejercicio no será valido. Incluya un llamado a la función
+recursiva: "evaluar @sumar (4, 5) finEval "
+
+rec
+	@sumar(@a, @b)=
+		Si @b entonces evaluar @sumar(add1(@a), sub1(@b)) finEval
+		sino @a finSI
+in 
+	evaluar @sumar(4,5) finEval
+
 |#
 
 
